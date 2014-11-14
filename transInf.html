@@ -46,13 +46,15 @@ for(i=0;i<5;i++){
 
 // put images in document body
 newTrial()
+// runs through a single trial, picking a pair of images
 function newTrial(){
   if(combination_array.length == 0){
     console.log("finished!")
     return
   }
+  // pulls a random combination from the array of combinations
   var this_combination = Math.floor(Math.random()*combination_array.length);
-  var current_pair = combination_array[this_combination]//combination_array.pop();
+  var current_pair = combination_array[this_combination]
   trial_objects.push(current_pair);
   combination_array.splice(this_combination, 1);
   var index1 = Math.floor(Math.random()*2);
@@ -64,14 +66,11 @@ function newTrial(){
     index2 = 1;
   }
   console.log(combination_array)
-  //var index2 = Math.floor(Math.random()*5);
-  //while(index2 == index1){
-  //  index2 = Math.floor(Math.random()*5);
-  //}
+
   var stimulus_one = createStimulus(current_pair[index1]);
   var stimulus_two = createStimulus(current_pair[index2]);
 
-
+  // create ranking
   if(current_pair[index1].rank < current_pair[index2].rank){
     current_pair[index1].correct = true;
   }
@@ -81,7 +80,7 @@ function newTrial(){
 }
 
 
-
+// creates the stimulus
 function createStimulus(image_object){
   var stimulus = document.createElement('img');
     stimulus.id = image_object.id;
@@ -90,21 +89,24 @@ function createStimulus(image_object){
     stimulus.height = 250;
     stimulus.class = "temporary";
     document.body.appendChild(stimulus);
+    // once image is clicked, experiment result is recorded and next trial starts
     stimulus.addEventListener('click', function(){
         giveResult(image_object);
     });
     return stimulus;
 }
 
+// records experiment, instigates new trial
 function giveResult(image){
   var stimulus = document.getElementById(image.id);
+  // if participant selects correct image
   if(image.correct){
-    //instead of making red, instigate new trial
     trial_result.push("true");
     console.log(trial_result);
     resetVars(false);
     presentInterTrial();
   }
+  // incorrect image
   else{
     trial_result.push("false");
     console.log(trial_result);
@@ -112,6 +114,8 @@ function giveResult(image){
     presentInterTrial();
   }
 }
+
+// clears html document of image objects
 function resetVars(newTrialBool){
   var selection = document.getElementsByTagName('img');
   for(i=0;i <= selection.length;i++){
@@ -121,10 +125,12 @@ function resetVars(newTrialBool){
     picture_array[i].correct = false;
   }
   if(newTrialBool){
+    // wait a second for next trial
     setTimeout(newTrial, 1000);
   }
 }
 
+// present image to re-orientate participant
 function presentInterTrial(){
   var interImg = document.createElement('img');
   interImg.width = 250;
