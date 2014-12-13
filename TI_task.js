@@ -18,8 +18,6 @@ for(i=0;i<5;i++){
 }
 
 
-
-
 // put images in document body
 newTrial()
 
@@ -61,7 +59,7 @@ function newTrial(){
 function createStimulus(image_object){
   var stimulus = document.createElement('img');
     stimulus.id = image_object.id;
-    stimulus.src = image_object.filepath;
+    stimulus.src = image_object.filepath + new Date().getTime();;
     stimulus.width = 250;
     stimulus.height = 250;
     stimulus.class = "temporary";
@@ -70,9 +68,9 @@ function createStimulus(image_object){
     stimulus.addEventListener('click', function(){
         giveResult(image_object);
     });
-    stimulus.addEventListener('touchstart', function(){
-      giveResult(image_object);
-    })
+    //stimulus.addEventListener('touchstart', function(){
+    // giveResult(image_object);
+    //})
     return stimulus;
 }
 
@@ -118,10 +116,10 @@ function presentInterTrial(){
 
   //document.getElementById("body").style.left = 1;
   if(trial_result[trial_result.length - 1] === "true"){
-    interImg.src = "pics/green.png"
+    interImg.src = "pics/green.png" + new Date().getTime();
   }
   else{
-    interImg.src = "pics/solidRed.jpg"
+    interImg.src = "pics/solidRed.jpg" + new Date().getTime();
   }
   document.body.appendChild(interImg);
   interImg.addEventListener('click', function(){

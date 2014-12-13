@@ -4,17 +4,20 @@
 var port = 8080;
 var serverUrl = "127.0.0.1";
  
+var app = require('express');
 var http = require("http");
 var path = require("path"); 
-var fs = require("fs");         
+var fs = require("fs");
+         
  
 console.log("Starting web server at " + serverUrl + ":" + port);
  
-http.createServer( function(req, res) {
+var server = http.createServer( function(req, res) {
  
     var now = new Date();
  
     var filename = req.url || "index.html";
+
     var ext = path.extname(filename);
     var localPath = __dirname;
     var validExtensions = {
@@ -24,9 +27,20 @@ http.createServer( function(req, res) {
         ".txt": "text/plain",
         ".jpg": "image/jpeg",
         ".gif": "image/gif",
-        ".png": "image/png"
+        ".png": "image/png",
+        ".ico": "image/ico"
     };
     var isValidExt = validExtensions[ext];
+    if(!isValidExt){
+        console.log(filename)
+        console.log(now.getTime())
+        tempName = filename.substring(0, filename.length - now.getTime().toString().length);
+        var isValidExt = validExtensions[path.extname(tempName)];
+        if(isValidExt){
+            filename =tempName;
+        }
+        console.log(filename)
+    }
  
     if (isValidExt) {
         
@@ -34,8 +48,9 @@ http.createServer( function(req, res) {
         path.exists(localPath, function(exists) {
             if(exists) {
                 console.log("Serving file: " + localPath);
+                console.log('localPath: ' + localPath)
                 if(filename === "/pics/green.png"){
-                    //console.log("file true!");
+                    console.log("file true!");
                     goArduino();
                 };
                 getFile(localPath, res, ext);
@@ -51,8 +66,11 @@ http.createServer( function(req, res) {
     }
  
 }).listen(port, serverUrl);
+
+server.on('request', function(req, res){console.log("yes!")});
  
 function getFile(localPath, res, mimeType) {
+    console.log("happening!")
     fs.readFile(localPath, function(err, contents) {
         if(!err) {
             res.setHeader("Content-Length", contents.length);
@@ -81,7 +99,9 @@ board.on("ready", function(){
     
 
 function goArduino(){
-    if(typeof board === 'undefined'){
+    console.log('got here')
+    if(board){
+        console.log('and here?')
         board.digitalWrite(LEDPIN, 1);
         setTimeout(function(){board.digitalWrite(LEDPIN, 0)}, 2000);
     }
