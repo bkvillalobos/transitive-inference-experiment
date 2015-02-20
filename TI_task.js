@@ -21,10 +21,14 @@ for(i=0;i<5;i++){
 // put images in document body
 newTrial()
 
+
 // runs through a single trial, picking a pair of images
 function newTrial(){
   if(combination_array.length == 0){
     console.log("finished!")
+    var xmlhttp = variable = new XMLHttpRequest();
+    xmlhttp.open("GET", trial_result.toString() + ".sav",true);
+    xmlhttp.send();
     return
   }
   // pulls a random combination from the array of combinations
@@ -45,6 +49,10 @@ function newTrial(){
   var stimulus_one = createStimulus(current_pair[index1]);
   var stimulus_two = createStimulus(current_pair[index2]);
 
+
+
+  
+
   // create ranking
   if(current_pair[index1].rank < current_pair[index2].rank){
     current_pair[index1].correct = true;
@@ -52,6 +60,15 @@ function newTrial(){
   else{
     current_pair[index2].correct = true;
     }
+}
+
+function checkClicked(source){
+  var selection = document.getElementsByTagName('img');
+  if(selection.length > 1 && (selection[0].src == source || selection[1].src == source)){
+    if(selection[0].class === "unclicked" && selection[1].class === "unclicked"){
+      selection[0].click();
+    }
+  }
 }
 
 
@@ -62,12 +79,23 @@ function createStimulus(image_object){
     stimulus.src = image_object.filepath + new Date().getTime();;
     stimulus.width = 250;
     stimulus.height = 250;
-    stimulus.class = "temporary";
+    stimulus.class = "unclicked";
     document.body.appendChild(stimulus);
+    var creation_time = new Date().getTime();
     // once image is clicked, experiment result is recorded and next trial starts
     stimulus.addEventListener('click', function(){
-        giveResult(image_object);
+      var event_time = new Date().getTime();
+      image_object.class = "clicked";
+      if(event_time - creation_time <= 10000){
+        giveResult(image_object, true);
+      }
+      else{
+        giveResult(image_object, false);
+      }
     });
+    setTimeout(function(){checkClicked(stimulus.src)}, 10000)
+    
+
     //stimulus.addEventListener('touchstart', function(){
     // giveResult(image_object);
     //})
@@ -75,16 +103,25 @@ function createStimulus(image_object){
 }
 
 // records experiment, instigates new trial
-function giveResult(image){
+function giveResult(image, action_taken){
   var stimulus = document.getElementById(image.id);
-  // if participant selects correct image
-  if(image.correct){
-    trial_result.push("true");
-    console.log(trial_result);
-    resetVars(false);
-    presentInterTrial();
+  
+  if(action_taken){
+    // if participant selects correct image
+    if(image.correct){
+      trial_result.push("true");
+      console.log(trial_result);
+      resetVars(false);
+      presentInterTrial();
+    }
+    // incorrect image
+    else {
+      trial_result.push("false");
+      console.log(trial_result);
+      resetVars(false);
+      setTimeout(presentInterTrial, 1500);
+    }
   }
-  // incorrect image
   else{
     trial_result.push("false");
     console.log(trial_result);
@@ -101,26 +138,23 @@ function resetVars(newTrialBool){
   }
   for(i=0;i<5;i++){
     picture_array[i].correct = false;
+    picture_array[i].class = "unclicked";
   }
   if(newTrialBool){
     // wait a second for next trial
-    setTimeout(newTrial, 1000);
+    newTrial();
   }
 }
 
 // present image to re-orientate participant
 function presentInterTrial(){
   var interImg = document.createElement('img');
-  interImg.width = 500;
-  interImg.height = 250;
+  interImg.width = 150;
+  interImg.height = 150;
+  interImg.style.paddingLeft = "325px";
+  interImg.style.paddingTop = "50px" 
+  interImg.src = "pics/green.png" + new Date().getTime();
 
-  //document.getElementById("body").style.left = 1;
-  if(trial_result[trial_result.length - 1] === "true"){
-    interImg.src = "pics/green.png" + new Date().getTime();
-  }
-  else{
-    interImg.src = "pics/solidRed.jpg" + new Date().getTime();
-  }
   document.body.appendChild(interImg);
   interImg.addEventListener('click', function(){
       resetVars(true);
