@@ -35,8 +35,8 @@ var server = http.createServer( function(req, res) {
 
     };
     var isValidExt = validExtensions[ext];
-    console.log(filename)
-    console.log(path.extname(filename))
+    //console.log(filename)
+    //console.log(path.extname(filename))
     if(!isValidExt){
         tempName = filename.substring(0, filename.length - now.getTime().toString().length);
         var isValidExt = validExtensions[path.extname(tempName)];
@@ -56,16 +56,16 @@ var server = http.createServer( function(req, res) {
                 getFile(localPath, res, ext);
                 
             } 
-            else if(path.extname(filename) === ".sav"){
+            else if(path.extname(filename) === ".opn"){
               fs.writeFile('output.txt', parseData(filename), function (err) {
                 if (err) return console.log(err);
-                  console.log( filename + ' > output.txt err:' + err);
+                //console.log( filename + ' > output.txt err:' + err);
                 });
             }
             else if(path.extname(filename) === ".sav"){
               fs.appendFile('output.txt', parseData(filename), function (err) {
-              if (err) return console.log(err);
-                console.log( filename + ' > output.txt');
+                if (err) return console.log(err);
+                //console.log( filename + ' > output.txt');
               });
             }
             else {
@@ -83,7 +83,8 @@ var server = http.createServer( function(req, res) {
 }).listen(port, serverUrl);
 
 function parseData(data){
-  data = data.substring(1, data.length - 3)
+  data = data.substring(1, data.length - 4)
+  data = data + "\n"
   return data;
 }
 

@@ -5,18 +5,31 @@ B = {filepath: "pics/30rock.jpg", id: "mal", rank: 1, correct: false};
 C = {filepath: "pics/arrested.png", id: "fiona", rank: 2, correct: false};
 D = {filepath: "pics/louie1.jpg", id:"giraffe", rank: 3, correct: false};
 E = {filepath: "pics/fiona.jpg", id:"snow_leopard", rank: 4, correct: false};
+
+subject_id = (1).toString();
 picture_array = [A, B, C, D, E];
+trial_number = Array();
 combination_array = Array();
-trial_objects = Array();
-trial_result = Array();
+session_length = 0;
 for(i=0;i<5;i++){
   for(j=0;j<5;j++){
     if(i != j){
+      session_length = session_length + 1;
+      trial_number.push(session_length.toString());
       combination_array.push([picture_array[i], picture_array[j]]);
     }
   }
 }
+trial_objects = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"");
+trial_result = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"");
+trial_timeouts = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"0");
+interTrial_timeouts = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"0");
+id_array = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,subject_id);
+current_trial = -1;
 
+console.log(trial_number);
+console.log(id_array);
+console.log(trial_timeouts)
 
 // put images in document body
 newTrial()
@@ -24,12 +37,14 @@ newTrial()
 
 // runs through a single trial, picking a pair of images
 function newTrial(){
+  current_trial = current_trial + 1;
+  
+
+
+
   if(combination_array.length == 0){
-    console.log("finished!")
-    var xmlhttp = variable = new XMLHttpRequest();
-    xmlhttp.open("GET", trial_result.toString() + ".sav",true);
-    xmlhttp.send();
-    return
+    console.log("finished!");
+    printToServer();
   }
   // pulls a random combination from the array of combinations
   var this_combination = Math.floor(Math.random()*combination_array.length);
@@ -109,21 +124,21 @@ function giveResult(image, action_taken){
   if(action_taken){
     // if participant selects correct image
     if(image.correct){
-      trial_result.push("true");
+      trial_result[current_trial] = "1";
       console.log(trial_result);
       resetVars(false);
       presentInterTrial();
     }
     // incorrect image
     else {
-      trial_result.push("false");
+      trial_result[current_trial] = "0";
       console.log(trial_result);
       resetVars(false);
       setTimeout(presentInterTrial, 1500);
     }
   }
   else{
-    trial_result.push("false");
+    trial_result[current_trial] = "0";
     console.log(trial_result);
     resetVars(false);
     presentInterTrial();
@@ -159,5 +174,24 @@ function presentInterTrial(){
   interImg.addEventListener('click', function(){
       resetVars(true);
   });
+
+  }
+  function printToServer(){
+    
+    for(i=0; i<session_length; i++){
+      
+      print_string = "";
+      print_string += id_array[i] + ",";
+      print_string += trial_number[i] + ",";
+      print_string += trial_result[i] + ",";
+      print_string += trial_timeouts[i] + ",";
+      print_string += interTrial_timeouts[i] + ",";
+      print_string += trial_objects[i][0] + ",";
+      print_string += trial_objects[i][1];
+      console.log(print_string);
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.open("GET", print_string + ".sav",true);
+      xmlhttp.send();
+    }
 
   }
