@@ -1,10 +1,10 @@
 // later replace hardcoded images with image files input of some kind
 // separately: randomize ranks, can be done sooner
-A = {filepath: "pics/mal.jpg", id: "hedwig", rank: 0, correct: false};
-B = {filepath: "pics/30rock.jpg", id: "mal", rank: 1, correct: false};
-C = {filepath: "pics/arrested.png", id: "fiona", rank: 2, correct: false};
-D = {filepath: "pics/louie1.jpg", id:"giraffe", rank: 3, correct: false};
-E = {filepath: "pics/fiona.jpg", id:"snow_leopard", rank: 4, correct: false};
+A = {filepath: "pics/0.jpg", id: "", rank: 0, correct: false};
+B = {filepath: "pics/1.jpg", id: "", rank: 1, correct: false};
+C = {filepath: "pics/2.jpg", id: "", rank: 2, correct: false};
+D = {filepath: "pics/3.jpg", id:"", rank: 3, correct: false};
+E = {filepath: "pics/4.jpg", id:"", rank: 4, correct: false};
 
 subject_id = (1).toString();
 picture_array = [A, B, C, D, E];
@@ -20,12 +20,14 @@ for(i=0;i<5;i++){
     }
   }
 }
-trial_objects = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"");
-trial_result = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"");
-trial_timeouts = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"0");
-interTrial_timeouts = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"0");
-id_array = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,subject_id);
-current_trial = -1;
+var trial_objects = Array();
+var trial_result = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"");
+var result_time = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"");
+var trial_timeouts = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"0");
+var timeout_time = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"NA");
+var interTrial_timeouts = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,"0");
+var id_array = Array.apply(null, new Array(session_length)).map(String.prototype.valueOf,subject_id);
+var current_trial = -1;
 
 console.log(trial_number);
 console.log(id_array);
@@ -38,42 +40,42 @@ newTrial()
 // runs through a single trial, picking a pair of images
 function newTrial(){
   current_trial = current_trial + 1;
-  
-
-
 
   if(combination_array.length == 0){
     console.log("finished!");
     printToServer();
   }
-  // pulls a random combination from the array of combinations
-  var this_combination = Math.floor(Math.random()*combination_array.length);
-  var current_pair = combination_array[this_combination]
-  trial_objects.push(current_pair);
-  combination_array.splice(this_combination, 1);
-  var index1 = Math.floor(Math.random()*2);
-  var index2;
-  if(index1 == 1){
-    index2 = 0;
-  }
   else{
-    index2 = 1;
-  }
-  console.log(combination_array)
+    // pulls a random combination from the array of combinations
+    var this_combination = Math.floor(Math.random()*combination_array.length);
+    var current_pair = combination_array[this_combination]
+    trial_objects.push(current_pair);
+    console.log(trial_objects);
+    combination_array.splice(this_combination, 1);
+    var index1 = Math.floor(Math.random()*2);
+    var index2;
+    if(index1 == 1){
+      index2 = 0;
+    }
+    else{
+      index2 = 1;
+    }
+    console.log(combination_array)
 
-  var stimulus_one = createStimulus(current_pair[index1]);
-  var stimulus_two = createStimulus(current_pair[index2]);
+    var stimulus_one = createStimulus(current_pair[index1]);
+    var stimulus_two = createStimulus(current_pair[index2]);
 
 
 
-  
+    
 
-  // create ranking
-  if(current_pair[index1].rank < current_pair[index2].rank){
-    current_pair[index1].correct = true;
-  }
-  else{
-    current_pair[index2].correct = true;
+    // create ranking
+    if(current_pair[index1].rank < current_pair[index2].rank){
+      current_pair[index1].correct = true;
+    }
+    else{
+      current_pair[index2].correct = true;
+      }
     }
 }
 
@@ -100,6 +102,7 @@ function createStimulus(image_object){
     // once image is clicked, experiment result is recorded and next trial starts
     stimulus.addEventListener('click', function(){
       var event_time = new Date().getTime();
+      result_time[current_trial] = event_time;
       image_object.class = "clicked";
       if(event_time - creation_time <= 10000){
         giveResult(image_object, true);
@@ -138,6 +141,7 @@ function giveResult(image, action_taken){
     }
   }
   else{
+    timeout_time[current_trial] = new Date().getTime();
     trial_result[current_trial] = "0";
     console.log(trial_result);
     resetVars(false);
@@ -177,21 +181,22 @@ function presentInterTrial(){
 
   }
   function printToServer(){
-    
+    print_string = "";
+    var xmlhttp = new XMLHttpRequest();
     for(i=0; i<session_length; i++){
-      
-      print_string = "";
       print_string += id_array[i] + ",";
       print_string += trial_number[i] + ",";
       print_string += trial_result[i] + ",";
+      print_string += result_time[i] + ",";
       print_string += trial_timeouts[i] + ",";
+      print_string += timeout_time[i] + ",";
       print_string += interTrial_timeouts[i] + ",";
-      print_string += trial_objects[i][0] + ",";
-      print_string += trial_objects[i][1];
+      print_string += trial_objects[i][0].filepath + ",";
+      print_string += trial_objects[i][1].filepath;
+      print_string += ";";
       console.log(print_string);
-      var xmlhttp = new XMLHttpRequest();
-      xmlhttp.open("GET", print_string + ".sav",true);
-      xmlhttp.send();
+      xmlhttp.open("POST", print_string + ".sav",true);
     }
+    xmlhttp.send();
 
   }
