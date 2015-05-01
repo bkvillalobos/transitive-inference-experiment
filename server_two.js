@@ -9,11 +9,18 @@ var app = require('express');
 var http = require("http");
 var path = require("path"); 
 var fs = require("fs");
+var args = process.argv.slice(2);
+var strainID, subjectID;
+
+validation();
+var dateString = makeDate();
+var folder = "trialData";
+var outputFile = folder + "/" + strainID + "-" + subjectID + "-" + dateString + ".csv"
+console.log(outputFile);
          
- 
 console.log("Starting web server at " + serverUrl + ":" + port);
 var fileList = fs.readdirSync("./pics");
-console.log(fileList);
+//console.log(fileList);
 
 //+ Shuffle Algorithm taken from Jonas Raoni Soares Silva
 //@ http://jsfromhell.com/array/shuffle [v1.0]
@@ -22,7 +29,7 @@ function shuffle(o){
     return o;
 };
 fileList = shuffle(fileList);
-console.log(fileList);
+//console.log(fileList);
 var picArray = Array();
 var i = 0;
 while(picArray.length < 5){
@@ -31,7 +38,7 @@ while(picArray.length < 5){
     }
     i = i + 1;
 }
-console.log(picArray);
+//console.log(picArray);
  
 var server = http.createServer( function(req, res) {
  
@@ -77,24 +84,24 @@ var server = http.createServer( function(req, res) {
                 getFile(localPath, res, ext); 
             } 
             else if(!isNaN(filename.substring(6,7))){
-                console.log("got here!")
+                //console.log("got here!")
                 getFile("./pics/" + picArray[parseInt(filename.substring(6,7))], res, ext);
             }
             // delete this, and the other .opn stuff later
             else if(path.extname(filename) === ".opn"){
-              fs.writeFile('output.txt', parseData(filename), function (err) {
+              fs.writeFile(outputFile, parseData(filename), function (err) {
                 if (err) return console.log(err);
-                //console.log( filename + ' > output.txt err:' + err);
+                //console.log( filename + ' > outputFile err:' + err);
                 });
             }
             else if(path.extname(filename) === ".sav"){
-              fs.writeFile("output.txt", dataHeader, function (err) {
+              fs.writeFile(outputFile, dataHeader, function (err) {
                 if (err) return console.log(err);
-                //console.log( filename + ' > output.txt');
+                //console.log( filename + ' > outputFile');
               });
-              fs.appendFile("output.txt", parseData(filename), function (err) {
+              fs.appendFile(outputFile, parseData(filename), function (err) {
                 if (err) return console.log(err);
-                //console.log( filename + ' > output.txt');
+                //console.log( filename + ' > outputFile');
               });
             }
             else {
@@ -119,7 +126,6 @@ function parseData(data){
 }
 
 
-
 function getFile(localPath, res, mimeType) {
     
     fs.readFile(localPath, function(err, contents) {
@@ -136,3 +142,72 @@ function getFile(localPath, res, mimeType) {
         }
     });
 }
+
+function usage(){
+    console.log("server_two.js usage:");
+    console.log("node server_two.js [strain_id] [subject_id]");
+    console.log("Starts server for TI task with subject");
+}
+
+function validation(){
+    console.log(args);
+    if(args.length != 2){
+        console.log("Error: incorrect number of parameters");
+        usage();
+        process.exit();
+    }
+    else if(args[0].length != 4){
+        console.log("Error: Strain ID is not 4 characters");
+        process.exit();
+    }
+    else if(args[1].length != 8){
+        console.log("Error: Subject ID is not 8 characters");
+        process.exit();
+    }
+    else{
+        strainID = args[0];
+        console.log("Species Strain ID: " + args[0]);
+        subjectID = args[1];
+        console.log("Subject ID: " + args[1]);
+    }
+}
+
+function makeDate(){
+    fileDate = new Date();
+    // add year
+    returnString = fileDate.getFullYear().toString();
+    // add month
+    if((fileDate.getMonth() + 1).toString().length != 2){
+        returnString = returnString + "-0" + (fileDate.getMonth() + 1).toString();
+    }
+    else{
+        returnString = returnString + "-" + (fileDate.getMonth() + 1).toString();
+    }
+    // add date
+    if(fileDate.getDate().toString().length != 2){
+        returnString = returnString + "-0" + fileDate.getDate().toString();
+    }
+    else{
+        returnString = returnString + "-" + fileDate.getDate().toString();
+    }
+    // add hours
+    if(fileDate.getHours().toString().length != 2){
+        returnString = returnString + "-0" + fileDate.getHours().toString();
+    }
+    else{
+        returnString = returnString + "-" + fileDate.getHours().toString();
+    }
+    // add minutes
+    if(fileDate.getMinutes().toString().length != 2){
+        returnString = returnString + "0" + fileDate.getMinutes().toString();
+    }
+    else{
+        returnString = returnString + fileDate.getMinutes().toString();
+    }
+    console.log("Timestamp: " + returnString);
+
+    return returnString; 
+}
+
+
+
