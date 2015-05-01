@@ -1,12 +1,21 @@
-// later replace hardcoded images with image files input of some kind
-// separately: randomize ranks, can be done sooner
-A = {filepath: "pics/0.jpg", id: "", rank: 0, correct: false};
-B = {filepath: "pics/1.jpg", id: "", rank: 1, correct: false};
-C = {filepath: "pics/2.jpg", id: "", rank: 2, correct: false};
-D = {filepath: "pics/3.jpg", id:"", rank: 3, correct: false};
-E = {filepath: "pics/4.jpg", id:"", rank: 4, correct: false};
+// Transitive Inference Task for use with Humans and Non-Human Primates
+// client-side
+// Brendon Villalobos
 
-subject_id = (1).toString();
+// gather preliminary data
+var dataHttp = new XMLHttpRequest();
+dataHttp.open("GET", "info.dat", false);
+dataHttp.send();
+dataList = dataHttp.responseText.split(",");
+
+// randomize ranks
+A = {filepath: "pics/0.jpg", id: dataList[2], rank: 0, correct: false};
+B = {filepath: "pics/1.jpg", id: dataList[3], rank: 1, correct: false};
+C = {filepath: "pics/2.jpg", id: dataList[4], rank: 2, correct: false};
+D = {filepath: "pics/3.jpg", id: dataList[5], rank: 3, correct: false};
+E = {filepath: "pics/4.jpg", id: dataList[6], rank: 4, correct: false};
+
+subject_id = dataList[0];
 picture_array = [A, B, C, D, E];
 trial_number = Array();
 combination_array = Array();
@@ -172,7 +181,12 @@ function presentInterTrial(){
   interImg.height = 150;
   interImg.style.paddingLeft = "325px";
   interImg.style.paddingTop = "50px" 
-  interImg.src = "pics/green.png" + new Date().getTime();
+  if(trial_result[current_trial] == "0"){
+    interImg.src = "pics/ex.jpg" + new Date().getTime();
+  }
+  else{
+    interImg.src = "pics/check.jpg" + new Date().getTime();
+  }
 
   document.body.appendChild(interImg);
   interImg.addEventListener('click', function(){
@@ -191,11 +205,11 @@ function presentInterTrial(){
       print_string += trial_timeouts[i] + ",";
       print_string += timeout_time[i] + ",";
       print_string += interTrial_timeouts[i] + ",";
-      print_string += trial_objects[i][0].filepath + ",";
-      print_string += trial_objects[i][1].filepath;
+      print_string += trial_objects[i][0].id + ",";
+      print_string += trial_objects[i][1].id;
       print_string += ";";
       console.log(print_string);
-      xmlhttp.open("POST", print_string + ".sav",true);
+      xmlhttp.open("POST", print_string + ".sav" ,true);
     }
     xmlhttp.send();
 

@@ -1,4 +1,5 @@
 // Transitive Inference Task
+// server-side
 // Brendon Villalobos
 
 
@@ -10,30 +11,29 @@ var http = require("http");
 var path = require("path"); 
 var fs = require("fs");
 var args = process.argv.slice(2);
+var random = false;
 var strainID, subjectID;
 
 validation();
 var dateString = makeDate();
-var folder = "trialData";
+var folder = "trialData"; // hardcoded
 var outputFile = folder + "/" + strainID + "-" + subjectID + "-" + dateString + ".csv"
-console.log(outputFile);
-         
+//console.log(outputFile);
+
+console.log("Randomization: " + random);
 console.log("Starting web server at " + serverUrl + ":" + port);
 var fileList = fs.readdirSync("./pics");
 //console.log(fileList);
 
-//+ Shuffle Algorithm taken from Jonas Raoni Soares Silva
-//@ http://jsfromhell.com/array/shuffle [v1.0]
-function shuffle(o){ 
-    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-    return o;
-};
-fileList = shuffle(fileList);
+if(random){
+    fileList = shuffle(fileList);
+}
 //console.log(fileList);
 var picArray = Array();
 var i = 0;
 while(picArray.length < 5){
-    if(fileList[i] != "green.png" && fileList[i].substring(0,1) != "."){
+    if(fileList[i] != "green.png" && fileList[i] != "check.jpg"
+    && fileList[i] != "ex.jpg" && fileList[i].substring(0,1) != "."){
         picArray.push(fileList[i]);
     }
     i = i + 1;
@@ -60,12 +60,13 @@ var server = http.createServer( function(req, res) {
         ".png": "image/png",
         ".ico": "image/ico",
         ".opn": "text/open",
-        ".sav": "text/sav"
+        ".sav": "text/sav",
+        ".dat": "text/data"
 
     };
     var isValidExt = validExtensions[ext];
     //console.log(filename)
-    //console.log(path.extname(filename))
+    console.log(path.extname(filename))
     if(!isValidExt){
         tempName = filename.substring(0, filename.length - now.getTime().toString().length);
         var isValidExt = validExtensions[path.extname(tempName)];
@@ -73,7 +74,7 @@ var server = http.createServer( function(req, res) {
             filename = tempName;
         }
     }
-    console.log("./pics/" + picArray[filename.substring(6,7)]);
+    //console.log("./pics/" + picArray[filename.substring(6,7)]);
     if (isValidExt) {
         localPath += filename;
         fs.exists(localPath, function(exists) {
@@ -83,7 +84,7 @@ var server = http.createServer( function(req, res) {
                 
                 getFile(localPath, res, ext); 
             } 
-            else if(!isNaN(filename.substring(6,7))){
+            else if(path.extname(filename) !== ".sav" && !isNaN(filename.substring(6,7))){
                 //console.log("got here!")
                 getFile("./pics/" + picArray[parseInt(filename.substring(6,7))], res, ext);
             }
@@ -95,14 +96,24 @@ var server = http.createServer( function(req, res) {
                 });
             }
             else if(path.extname(filename) === ".sav"){
+                console.log("got here")
               fs.writeFile(outputFile, dataHeader, function (err) {
                 if (err) return console.log(err);
                 //console.log( filename + ' > outputFile');
               });
+              console.log("here too")
+              console.log(parseData(filename))
               fs.appendFile(outputFile, parseData(filename), function (err) {
                 if (err) return console.log(err);
                 //console.log( filename + ' > outputFile');
               });
+            }
+            else if(path.extname(filename) === ".dat"){
+                var toSend = [subjectID, random, picArray].toString();
+                res.setHeader("Content-Length", toSend.length);
+                res.setHeader("Content-Type", ext);
+                res.statusCode = 200;
+                res.end(toSend);
             }
             else {
               console.log("File not found: " + localPath);
@@ -150,8 +161,9 @@ function usage(){
 }
 
 function validation(){
-    console.log(args);
-    if(args.length != 2){
+    //console.log(args);
+    if(!(args.length == 2 || args.length == 3)){
+        console.log(args.length);
         console.log("Error: incorrect number of parameters");
         usage();
         process.exit();
@@ -164,12 +176,18 @@ function validation(){
         console.log("Error: Subject ID is not 8 characters");
         process.exit();
     }
-    else{
-        strainID = args[0];
-        console.log("Species Strain ID: " + args[0]);
-        subjectID = args[1];
-        console.log("Subject ID: " + args[1]);
+    else if(args[2] !== undefined && args[2] != "random"){
+        console.log("Third parameter not equal to \'random\'");
+        process.exit();
     }
+    else if(args[2] == "random"){
+        random = true;
+    }
+    strainID = args[0];
+    console.log("Species Strain ID: " + args[0]);
+    subjectID = args[1];
+    console.log("Subject ID: " + args[1]);
+    
 }
 
 function makeDate(){
@@ -210,4 +228,9 @@ function makeDate(){
 }
 
 
-
+//+ Shuffle Algorithm taken from Jonas Raoni Soares Silva
+//@ http://jsfromhell.com/array/shuffle [v1.0]
+function shuffle(o){ 
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+};
