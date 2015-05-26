@@ -12,12 +12,11 @@ var path = require("path");
 var fs = require("fs");
 var args = process.argv.slice(2);
 var random = false;
-var strainID, subjectID;
+var strainID, subjectID, picArray, needNew;
 
 validation();
-var dateString = makeDate();
+var outputFile;
 var folder = "trialData"; // hardcoded
-var outputFile = folder + "/" + strainID + "-" + subjectID + "-" + dateString + ".csv"
 //console.log(outputFile);
 
 console.log("Randomization: " + random);
@@ -29,24 +28,31 @@ if(random){
     fileList = shuffle(fileList);
 }
 //console.log(fileList);
-var picArray = Array();
-var i = 0;
-while(picArray.length < 5){
-    if(fileList[i] != "green.png" && fileList[i] != "check.jpg"
-    && fileList[i] != "ex.jpg" && fileList[i].substring(0,1) != "."){
-        picArray.push(fileList[i]);
+function newList(){
+    picArray = Array();
+    outputFile = folder + "/" + strainID + "-" + subjectID + "-" + makeDate() + ".csv"
+    while(picArray.length < 5){
+        if(fileList.length == 0){
+            console.log("Picture file exhausted. Reinitiate server.");
+            process.exit();
+        }
+        console.log(fileList);
+        if(path.extname(fileList[fileList.length-1]) != ".spc" && fileList[fileList.length-1].substring(0,1) != "."){
+            picArray.push(fileList[fileList.length-1]);
+        }
+        fileList.pop();
     }
-    i = i + 1;
+    console.log(picArray);
 }
-//console.log(picArray);
- 
+
+newList();
+
 var server = http.createServer( function(req, res) {
- 
     var now = new Date();
  
     var filename = req.url || "index.html";
 
-    var dataHeader = "subject_id,trial,correct_response,response_time,trial_timeout,timeout_time,interTrial_timeout,left_image,right_image\n";
+    var dataHeader = "subject_id,trial,correct_response,stim_time,response_time,x_coord,y_coord,trial_timeout,timeout_time,interTrial_timeout,left_rank,left_image,right_rank,right_image\n";
     var ext = path.extname(filename);
     var localPath = __dirname;
     var validExtensions = {
@@ -61,7 +67,8 @@ var server = http.createServer( function(req, res) {
         ".ico": "image/ico",
         ".opn": "text/open",
         ".sav": "text/sav",
-        ".dat": "text/data"
+        ".dat": "text/data",
+        ".spc": "image/special"
 
     };
     var isValidExt = validExtensions[ext];
@@ -91,22 +98,33 @@ var server = http.createServer( function(req, res) {
             // delete this, and the other .opn stuff later
             else if(path.extname(filename) === ".opn"){
               fs.writeFile(outputFile, parseData(filename), function (err) {
-                if (err) return console.log(err);
-                //console.log( filename + ' > outputFile err:' + err);
+                if (err){
+                    return console.log(err)
+                } else{
+                    console.log( filename + ' > outputFile err:' + err);
+                }
                 });
             }
             else if(path.extname(filename) === ".sav"){
-                console.log("got here")
-              fs.writeFile(outputFile, dataHeader, function (err) {
-                if (err) return console.log(err);
-                //console.log( filename + ' > outputFile');
-              });
-              console.log("here too")
-              console.log(parseData(filename))
-              fs.appendFile(outputFile, parseData(filename), function (err) {
-                if (err) return console.log(err);
-                //console.log( filename + ' > outputFile');
-              });
+                console.log("got here");
+
+                fs.writeFile(outputFile, dataHeader, function (err) {
+                    if (err){
+                        return console.log(err);
+                    } else{
+                        console.log( filename + ' > outputFile err:' + err);
+                    }
+                });
+                console.log("here too");
+                console.log(parseData(filename));
+                fs.appendFile(outputFile, parseData(filename), function (err) {
+                    if (err){
+                        return console.log(err);
+                    } else{
+                        console.log( filename + ' > outputFile err:' + err);
+                    }
+                });
+                needNew = true;
             }
             else if(path.extname(filename) === ".dat"){
                 var toSend = [subjectID, random, picArray].toString();
@@ -126,7 +144,9 @@ var server = http.createServer( function(req, res) {
     else {
         console.log("File not found: " + filename);
     }
- 
+    if(needNew){
+        newList();
+        }
 }).listen(port, serverUrl);
 
 function parseData(data){
@@ -228,7 +248,7 @@ function makeDate(){
 }
 
 
-//+ Shuffle Algorithm taken from Jonas Raoni Soares Silva
+//+ Shuffle Algorithm used from Jonas Raoni Soares Silva
 //@ http://jsfromhell.com/array/shuffle [v1.0]
 function shuffle(o){ 
     for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
