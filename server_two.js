@@ -16,12 +16,13 @@ var strainID, subjectID, picArray, needNew;
 
 validation();
 var outputFile;
-var folder = "trialData"; // hardcoded
+var folder = "trialData";
+var pictureFolder = "./pics"; // hardcoded destination for the data files
 //console.log(outputFile);
 
 console.log("Randomization: " + random);
 console.log("Starting web server at " + serverUrl + ":" + port);
-var fileList = fs.readdirSync("./pics");
+var fileList = fs.readdirSync(pictureFolder);
 //console.log(fileList);
 
 if(random){
@@ -93,7 +94,7 @@ var server = http.createServer( function(req, res) {
             } 
             else if(path.extname(filename) !== ".sav" && !isNaN(filename.substring(6,7))){
                 //console.log("got here!")
-                getFile("./pics/" + picArray[parseInt(filename.substring(6,7))], res, ext);
+                getFile(pictureFolder +"/" + picArray[parseInt(filename.substring(6,7))], res, ext);
             }
             // delete this, and the other .opn stuff later
             else if(path.extname(filename) === ".opn"){
@@ -106,7 +107,7 @@ var server = http.createServer( function(req, res) {
                 });
             }
             else if(path.extname(filename) === ".sav"){
-                console.log("got here");
+                //console.log("got here");
 
                 fs.writeFile(outputFile, dataHeader, function (err) {
                     if (err){
@@ -115,7 +116,7 @@ var server = http.createServer( function(req, res) {
                         console.log( filename + ' > outputFile err:' + err);
                     }
                 });
-                console.log("here too");
+                //console.log("here too");
                 console.log(parseData(filename));
                 fs.appendFile(outputFile, parseData(filename), function (err) {
                     if (err){

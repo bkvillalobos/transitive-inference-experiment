@@ -2,13 +2,14 @@
 // client-side
 // Brendon Villalobos
 
-// gather preliminary data
+// gather preliminary data from server-side 
+// (which pictures to use and subject id)
 var dataHttp = new XMLHttpRequest();
 dataHttp.open("GET", "info.dat", false);
 dataHttp.send();
 dataList = dataHttp.responseText.split(",");
 
-// randomize ranks
+// assign information to pictures A through E
 A = {filepath: "pics/0.jpg", id: dataList[2], rank: 0, correct: false};
 B = {filepath: "pics/1.jpg", id: dataList[3], rank: 1, correct: false};
 C = {filepath: "pics/2.jpg", id: dataList[4], rank: 2, correct: false};
